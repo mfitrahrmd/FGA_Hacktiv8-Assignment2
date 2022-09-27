@@ -1,0 +1,51 @@
+basePath: /
+host: localhost:80
+info:
+  contact:
+    email: soberkoder@swagger.io
+    name: API Support
+  description: This is a simple service for managing orders
+  termsOfService: http://swagger.io/terms
+  title: Orders API
+  version: "1.0"
+paths:
+  /orders:
+    delete:
+      consumes:
+      - application/json
+      description: Delete existing order
+      produces:
+      - application/json
+      responses: {}
+      summary: Delete existing order
+      tags:
+      - orders
+    get:
+      description: Get details of all orders
+      produces:
+      - application/json
+      responses: {}
+      summary: Get details of all orders
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: Create new order
+      produces:
+      - application/json
+      responses: {}
+      summary: Create new order
+      tags:
+      - orders
+    put:
+      consumes:
+      - application/json
+      description: Update existing order
+      produces:
+      - application/json
+      responses: {}
+      summary: Update existing order
+      tags:
+      - orders
+swagger: "2.0"

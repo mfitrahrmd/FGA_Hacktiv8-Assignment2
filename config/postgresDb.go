@@ -6,20 +6,25 @@ import (
 	"log"
 )
 
-var db *gorm.DB
+type DB struct {
+	Pg *gorm.DB
+}
 
-func GetDB(connectionString string) *gorm.DB {
-	if db == nil {
-		open, err := gorm.Open(postgres.Open(connectionString))
-		if err != nil {
-			log.Fatal(err.Error())
-			return nil
-		}
-
-		db = open
-
-		GetDB(connectionString)
+func GetDB(connectionString string) *DB {
+	open, err := gorm.Open(postgres.Open(connectionString))
+	if err != nil {
+		log.Fatal(err.Error())
+		return nil
 	}
 
-	return db
+	return &DB{
+		Pg: open,
+	}
+}
+
+func (d DB) Migrate(model ...any) {
+	err := d.Pg.AutoMigrate(model...)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
 }
