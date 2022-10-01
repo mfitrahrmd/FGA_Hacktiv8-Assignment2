@@ -22,21 +22,21 @@ type DeletedOrder struct {
 }
 
 type CreatedOrderResponse struct {
-	Status string `json:"status" example:"success"`
-	Data   CreatedOrder
+	Status string       `json:"status" example:"success"`
+	Data   CreatedOrder `json:"data"`
 }
 
 type GetOrdersResponse struct {
-	Status string `json:"status" example:"success"`
-	Data   GetOrders
+	Status string    `json:"status" example:"success"`
+	Data   GetOrders `json:"data"`
 }
 
 type UpdatedOrderResponse struct {
-	Status string `json:"status" example:"success"`
-	Data   UpdatedOrder
+	Status string       `json:"status" example:"success"`
+	Data   UpdatedOrder `json:"data"`
 }
 
 type DeletedOrderResponse struct {
-	Status string `json:"status" example:"success"`
-	Data   DeletedOrder
+	Status string       `json:"status" example:"success"`
+	Data   DeletedOrder `json:"data"`
 }
