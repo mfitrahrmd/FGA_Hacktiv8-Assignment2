@@ -15,6 +15,16 @@ type ServerErrorResponse struct {
 	Message string `json:"message" example:"server error, please try again later"`
 }
 
+type NotFoundResponse struct {
+	Status  string `json:"status" example:"fail"`
+	Message string `json:"message" example:"resources not found"`
+}
+
+type BadRequestResponse struct {
+	Status  string `json:"status" example:"fail"`
+	Message string `json:"message" example:"invalid request body"`
+}
+
 var (
 	INVALID_REQUEST_BODY = MyError{http.StatusBadRequest, "Invalid request body", nil}
 	NOT_FOUND            = MyError{http.StatusNotFound, "Resources do not exist", nil}
