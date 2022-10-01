@@ -29,11 +29,24 @@ const docTemplate = `{
                 "tags": [
                     "orders"
                 ],
-                "summary": "Get details of all orders",
-                "responses": {}
+                "summary": "Get all orders",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.GetOrdersResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helper.ServerErrorResponse"
+                        }
+                    }
+                }
             },
             "put": {
-                "description": "Update existing order",
+                "description": "Update existing order with new data",
                 "consumes": [
                     "application/json"
                 ],
@@ -43,11 +56,54 @@ const docTemplate = `{
                 "tags": [
                     "orders"
                 ],
-                "summary": "Update existing order",
-                "responses": {}
+                "summary": "Update an order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "order data to update",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/order.UpdateOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.UpdatedOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helper.BadRequestResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/helper.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helper.ServerErrorResponse"
+                        }
+                    }
+                }
             },
             "post": {
-                "description": "Create new order",
+                "description": "Create an order, and return the order id",
                 "consumes": [
                     "application/json"
                 ],
@@ -57,8 +113,32 @@ const docTemplate = `{
                 "tags": [
                     "orders"
                 ],
-                "summary": "Create new order",
-                "responses": {}
+                "summary": "Create an order",
+                "parameters": [
+                    {
+                        "description": "order data to create",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/order.CreateOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.CreatedOrderResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helper.ServerErrorResponse"
+                        }
+                    }
+                }
             },
             "delete": {
                 "description": "Delete existing order",
@@ -72,7 +152,274 @@ const docTemplate = `{
                     "orders"
                 ],
                 "summary": "Delete existing order",
-                "responses": {}
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.DeletedOrderResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/helper.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helper.ServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "helper.BadRequestResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "invalid request body"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "fail"
+                }
+            }
+        },
+        "helper.CreatedOrder": {
+            "type": "object",
+            "properties": {
+                "orderId": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "helper.CreatedOrderResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/helper.CreatedOrder"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "helper.DeletedOrder": {
+            "type": "object",
+            "properties": {
+                "orderId": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "helper.DeletedOrderResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/helper.DeletedOrder"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "helper.GetOrders": {
+            "type": "object",
+            "properties": {
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Order"
+                    }
+                }
+            }
+        },
+        "helper.GetOrdersResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/helper.GetOrders"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "helper.NotFoundResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "resources not found"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "fail"
+                }
+            }
+        },
+        "helper.ServerErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "server error, please try again later"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "fail"
+                }
+            }
+        },
+        "helper.UpdatedOrder": {
+            "type": "object",
+            "properties": {
+                "orderId": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "helper.UpdatedOrderResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/helper.UpdatedOrder"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "item.CreateItem": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Acer Aspire 3"
+                },
+                "itemCode": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "item.Item": {
+            "type": "object",
+            "required": [
+                "description",
+                "itemCode",
+                "quantity"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Acer Aspire 3"
+                },
+                "itemCode": {
+                    "type": "string",
+                    "example": "001"
+                },
+                "lineItemId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "orderId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "order.CreateOrder": {
+            "type": "object",
+            "properties": {
+                "customerName": {
+                    "type": "string",
+                    "example": "M Fitrah Ramadhan"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/item.CreateItem"
+                    }
+                },
+                "orderedAt": {
+                    "type": "string",
+                    "example": "2022-09-22T22:00:00+07:00"
+                }
+            }
+        },
+        "order.Order": {
+            "type": "object",
+            "required": [
+                "customerName",
+                "orderedAt"
+            ],
+            "properties": {
+                "customerName": {
+                    "type": "string",
+                    "example": "M Fitrah Ramadhan"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/item.Item"
+                    }
+                },
+                "orderId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "orderedAt": {
+                    "type": "string",
+                    "example": "2022-09-22T22:00:00+07:00"
+                }
+            }
+        },
+        "order.UpdateOrder": {
+            "type": "object",
+            "properties": {
+                "customerName": {
+                    "type": "string",
+                    "example": "M Fitrah Ramadhan"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/item.CreateItem"
+                    }
+                },
+                "orderedAt": {
+                    "type": "string",
+                    "example": "2022-09-22T22:00:00+07:00"
+                }
             }
         }
     }
@@ -81,7 +428,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:80",
+	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Orders API",

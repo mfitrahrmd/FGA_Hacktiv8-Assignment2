@@ -1,5 +1,169 @@
 basePath: /
-host: localhost:80
+definitions:
+  helper.BadRequestResponse:
+    properties:
+      message:
+        example: invalid request body
+        type: string
+      status:
+        example: fail
+        type: string
+    type: object
+  helper.CreatedOrder:
+    properties:
+      orderId:
+        example: 1
+        type: integer
+    type: object
+  helper.CreatedOrderResponse:
+    properties:
+      data:
+        $ref: '#/definitions/helper.CreatedOrder'
+      status:
+        example: success
+        type: string
+    type: object
+  helper.DeletedOrder:
+    properties:
+      orderId:
+        example: 1
+        type: integer
+    type: object
+  helper.DeletedOrderResponse:
+    properties:
+      data:
+        $ref: '#/definitions/helper.DeletedOrder'
+      status:
+        example: success
+        type: string
+    type: object
+  helper.GetOrders:
+    properties:
+      orders:
+        items:
+          $ref: '#/definitions/order.Order'
+        type: array
+    type: object
+  helper.GetOrdersResponse:
+    properties:
+      data:
+        $ref: '#/definitions/helper.GetOrders'
+      status:
+        example: success
+        type: string
+    type: object
+  helper.NotFoundResponse:
+    properties:
+      message:
+        example: resources not found
+        type: string
+      status:
+        example: fail
+        type: string
+    type: object
+  helper.ServerErrorResponse:
+    properties:
+      message:
+        example: server error, please try again later
+        type: string
+      status:
+        example: fail
+        type: string
+    type: object
+  helper.UpdatedOrder:
+    properties:
+      orderId:
+        example: 1
+        type: integer
+    type: object
+  helper.UpdatedOrderResponse:
+    properties:
+      data:
+        $ref: '#/definitions/helper.UpdatedOrder'
+      status:
+        example: success
+        type: string
+    type: object
+  item.CreateItem:
+    properties:
+      description:
+        example: Acer Aspire 3
+        type: string
+      itemCode:
+        example: 1
+        type: integer
+      quantity:
+        example: 1
+        type: integer
+    type: object
+  item.Item:
+    properties:
+      description:
+        example: Acer Aspire 3
+        type: string
+      itemCode:
+        example: "001"
+        type: string
+      lineItemId:
+        example: 1
+        type: integer
+      orderId:
+        example: 1
+        type: integer
+      quantity:
+        example: 1
+        type: integer
+    required:
+    - description
+    - itemCode
+    - quantity
+    type: object
+  order.CreateOrder:
+    properties:
+      customerName:
+        example: M Fitrah Ramadhan
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/item.CreateItem'
+        type: array
+      orderedAt:
+        example: "2022-09-22T22:00:00+07:00"
+        type: string
+    type: object
+  order.Order:
+    properties:
+      customerName:
+        example: M Fitrah Ramadhan
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/item.Item'
+        type: array
+      orderId:
+        example: 1
+        type: integer
+      orderedAt:
+        example: "2022-09-22T22:00:00+07:00"
+        type: string
+    required:
+    - customerName
+    - orderedAt
+    type: object
+  order.UpdateOrder:
+    properties:
+      customerName:
+        example: M Fitrah Ramadhan
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/item.CreateItem'
+        type: array
+      orderedAt:
+        example: "2022-09-22T22:00:00+07:00"
+        type: string
+    type: object
+host: localhost:8080
 info:
   contact:
     email: soberkoder@swagger.io
@@ -14,9 +178,27 @@ paths:
       consumes:
       - application/json
       description: Delete existing order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
-      responses: {}
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.DeletedOrderResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helper.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.ServerErrorResponse'
       summary: Delete existing order
       tags:
       - orders
@@ -24,28 +206,79 @@ paths:
       description: Get details of all orders
       produces:
       - application/json
-      responses: {}
-      summary: Get details of all orders
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.GetOrdersResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.ServerErrorResponse'
+      summary: Get all orders
       tags:
       - orders
     post:
       consumes:
       - application/json
-      description: Create new order
+      description: Create an order, and return the order id
+      parameters:
+      - description: order data to create
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/order.CreateOrder'
       produces:
       - application/json
-      responses: {}
-      summary: Create new order
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.CreatedOrderResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.ServerErrorResponse'
+      summary: Create an order
       tags:
       - orders
     put:
       consumes:
       - application/json
-      description: Update existing order
+      description: Update existing order with new data
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: order data to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/order.UpdateOrder'
       produces:
       - application/json
-      responses: {}
-      summary: Update existing order
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.UpdatedOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.BadRequestResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helper.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.ServerErrorResponse'
+      summary: Update an order
       tags:
       - orders
 swagger: "2.0"

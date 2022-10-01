@@ -14,7 +14,6 @@ func GetDB(connectionString string) *DB {
 	open, err := gorm.Open(postgres.Open(connectionString))
 	if err != nil {
 		log.Fatal(err.Error())
-		return nil
 	}
 
 	return &DB{

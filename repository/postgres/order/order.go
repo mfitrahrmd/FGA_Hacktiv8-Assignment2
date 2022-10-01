@@ -25,13 +25,8 @@ type CreateOrder struct {
 	Items        []item.CreateItem
 }
 
-type ReadOrder struct {
-	Order
-}
-
-type ResponseOrderCreated struct {
-	Status  string  `example:"success"`
-	OrderID OrderID `example:"1"`
+type UpdateOrder struct {
+	CreateOrder
 }
 
 func (por PostgresOrderRepository) InsertOne(order *Order) error {

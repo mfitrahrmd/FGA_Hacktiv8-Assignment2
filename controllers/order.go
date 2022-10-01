@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/mfitrahrmd420/FGA_Hacktiv8-Assignment2/helper"
 	"github.com/mfitrahrmd420/FGA_Hacktiv8-Assignment2/repository"
@@ -18,8 +17,8 @@ type OrderController struct {
 	ItemRepository  repository.ItemRepository
 }
 
-func NewOrderController(db *gorm.DB) OrderController {
-	return OrderController{
+func NewOrderController(db *gorm.DB) *OrderController {
+	return &OrderController{
 		OrderRepository: order.PostgresOrderRepository{
 			DB: db,
 		},
@@ -29,96 +28,108 @@ func NewOrderController(db *gorm.DB) OrderController {
 	}
 }
 
+//
+
 // CreateOrder godoc
-// @Summary Create new order
-// @Description Create new order
+// @Summary Create an order
+// @Description Create an order, and return the order id
 // @Tags orders
 // @Accept json
 // @Produce json
+// @Param body body order.CreateOrder true "order data to create"
+// @Success 200 {object} helper.CreatedOrderResponse
+// @Failure 500 {object} helper.ServerErrorResponse
 // @Router /orders [post]
 func (oc OrderController) CreateOrder(ctx *gin.Context) {
-	var reqBody order.Order
-
-	err := ctx.ShouldBindJSON(&reqBody)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+	body, ok := ctx.Get("reqBody")
+	if !ok {
+		ctx.Error(errors.New("cannot get request body from context"))
 
 		return
 	}
 
-	err = oc.OrderRepository.InsertOne(&reqBody)
+	reqBody := body.(order.Order)
+
+	err := oc.OrderRepository.InsertOne(&reqBody)
 	if err != nil {
-		helper.ServerError(ctx)
+		ctx.Error(err)
 
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"status": "success",
-		"data": gin.H{
-			"orderId": reqBody.OrderID,
+	ctx.JSON(http.StatusCreated, helper.CreatedOrderResponse{
+		Status: "success",
+		Data: helper.CreatedOrder{
+			OrderID: reqBody.OrderID,
 		},
 	})
 }
 
 // GetOrders godoc
-// @Summary Get details of all orders
+// @Summary Get all orders
 // @Description Get details of all orders
 // @Tags orders
 // @Produce json
+// @Success 200 {object} helper.GetOrdersResponse
+// @Failure 500 {object} helper.ServerErrorResponse
 // @Router /orders [get]
 func (oc OrderController) GetOrders(ctx *gin.Context) {
 	orders, err := oc.OrderRepository.FindAll()
 	if err != nil {
-		helper.ServerError(ctx)
+		ctx.Error(err)
 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"status": "success",
-		"data":   orders,
+	ctx.JSON(http.StatusOK, helper.GetOrdersResponse{
+		Status: "success",
+		Data: helper.GetOrders{
+			Orders: *orders,
+		},
 	})
 }
 
 // UpdateOrder godoc
-// @Summary Update existing order
-// @Description Update existing order
+// @Summary Update an order
+// @Description Update existing order with new data
 // @Tags orders
 // @Accept json
 // @Produce json
+// @Param id path int true "Order ID"
+// @Param body body order.UpdateOrder true "order data to update"
+// @Success 200 {object} helper.UpdatedOrderResponse
+// @Failure 404 {object} helper.NotFoundResponse
+// @Failure 400 {object} helper.BadRequestResponse
+// @Failure 500 {object} helper.ServerErrorResponse
 // @Router /orders [put]
 func (oc OrderController) UpdateOrder(ctx *gin.Context) {
-	var reqBody order.Order
-
-	id := ctx.Param("id")
-	orderId, _ := strconv.Atoi(id)
-	reqBody.OrderID = order.OrderID(orderId)
-
-	err := ctx.ShouldBindJSON(&reqBody)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+	body, ok := ctx.Get("reqBody")
+	if !ok {
+		ctx.Error(errors.New("cannot get request body from context"))
 
 		return
 	}
 
+	reqBody := body.(order.Order)
+
+	id := ctx.Param("id")
+	orderId, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.Error(err)
+
+		return
+	}
+
+	reqBody.OrderID = order.OrderID(orderId)
+
 	_, err = oc.OrderRepository.FindOne(&order.Order{OrderID: reqBody.OrderID})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			ctx.JSON(http.StatusNotFound, gin.H{
-				"status":  "fail",
-				"message": fmt.Sprintf("order with id %d was not found", orderId),
-			})
+			ctx.Error(helper.NOT_FOUND)
 
 			return
 		}
-		helper.ServerError(ctx)
+		ctx.Error(err)
 
 		return
 	}
@@ -127,14 +138,11 @@ func (oc OrderController) UpdateOrder(ctx *gin.Context) {
 		_, err = oc.ItemRepository.FindOne(&item.Item{ItemID: itm.ItemID})
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				ctx.JSON(http.StatusNotFound, gin.H{
-					"status":  "fail",
-					"message": fmt.Sprintf("item with id %d was not found", itm.ItemID),
-				})
+				ctx.Error(helper.NOT_FOUND)
 
 				return
 			}
-			helper.ServerError(ctx)
+			ctx.Error(err)
 
 			return
 		}
@@ -142,7 +150,7 @@ func (oc OrderController) UpdateOrder(ctx *gin.Context) {
 
 	err = oc.OrderRepository.UpdateOne(&reqBody)
 	if err != nil {
-		helper.ServerError(ctx)
+		ctx.Error(err)
 
 		return
 	}
@@ -161,22 +169,28 @@ func (oc OrderController) UpdateOrder(ctx *gin.Context) {
 // @Tags orders
 // @Accept json
 // @Produce json
+// @Param id path int true "Order ID"
+// @Success 200 {object} helper.DeletedOrderResponse
+// @Failure 404 {object} helper.NotFoundResponse
+// @Failure 500 {object} helper.ServerErrorResponse
 // @Router /orders [delete]
 func (oc OrderController) DeleteOrder(ctx *gin.Context) {
 	id := ctx.Param("id")
-	orderId, _ := strconv.Atoi(id)
+	orderId, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.Error(err)
 
-	_, err := oc.OrderRepository.FindOne(&order.Order{OrderID: order.OrderID(orderId)})
+		return
+	}
+
+	_, err = oc.OrderRepository.FindOne(&order.Order{OrderID: order.OrderID(orderId)})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			ctx.JSON(http.StatusNotFound, gin.H{
-				"status":  "fail",
-				"message": fmt.Sprintf("order with id %d was not found", orderId),
-			})
+			ctx.Error(helper.NOT_FOUND)
 
 			return
 		}
-		helper.ServerError(ctx)
+		ctx.Error(err)
 
 		return
 	}
@@ -185,7 +199,9 @@ func (oc OrderController) DeleteOrder(ctx *gin.Context) {
 		OrderID: order.OrderID(orderId),
 	})
 	if err != nil {
-		helper.ServerError(ctx)
+		ctx.Error(err)
+
+		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
